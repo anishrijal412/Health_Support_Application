@@ -119,7 +119,7 @@ def reset_password():
         session.pop('reset_email', None)
         session.pop('reset_code', None)
 
-        flash('✅ Password has been reset. You can log in now.', 'success')
+        flash('✅ Password has been reset. You can LogIn.', 'success')
         return redirect(url_for('auth.login'))
 
     return render_template('reset_password.html')
