@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Appointments · Mental Health App{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">My Appointments</h2>
+
+  <!-- Add form -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('appointments.create') }}" class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Title</label>
+          <input type="text" name="title" class="form-control" placeholder="e.g., Therapy session" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Date</label>
+          <input type="date" name="date" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Time</label>
+          <input type="time" name="time" class="form-control" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Description (optional)</label>
+          <textarea name="description" class="form-control" rows="2" placeholder="Notes, location, provider name, etc."></textarea>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Add Appointment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- List -->
+  {% if appointments %}
+    <ul class="list-group">
+      {% for appt in appointments %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ appt.title }}</strong><br>
+          {{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time.strftime('%H:%M') }}
+          {% if appt.description %}
+            <br><small class="text-muted">{{ appt.description }}</small>
+          {% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('appointments.delete', appointment_id=appt.id) }}">
+          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="alert alert-secondary">No appointments yet. Add one above.</div>
+  {% endif %}
+</div>
+{% endblock %}

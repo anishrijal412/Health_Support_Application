@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container my-4">
+
+  <!-- ================= PROFILE CARD ================= -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h3 class="mb-3">👤 Profile</h3>
+
+      {% if profile %}
+      <!-- Profile Details -->
+      <div class="row g-3">
+        <div class="col-md-6"><strong>Full Name:</strong> {{ profile.full_name }}</div>
+        <div class="col-md-3"><strong>Age:</strong> {{ profile.age }}</div>
+        <div class="col-md-3"><strong>Gender:</strong> {{ profile.gender }}</div>
+        <div class="col-md-4"><strong>SSN:</strong> {{ profile.ssn }}</div>
+        <div class="col-md-4"><strong>Email:</strong> {{ profile.email }}</div>
+        <div class="col-md-4"><strong>Phone:</strong> {{ profile.phone_number }}</div>
+        <div class="col-12"><strong>Address:</strong> {{ profile.address }}</div>
+      </div>
+
+      <div class="mt-3">
+        <button class="btn btn-primary me-2" data-bs-toggle="collapse" data-bs-target="#editProfileForm">
+          Edit Profile
+        </button>
+        <form action="{{ url_for('profile.delete_profile') }}" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-outline-danger">Delete Profile</button>
+        </form>
+      </div>
+
+      <!-- Edit Profile Form -->
+      <div id="editProfileForm" class="collapse mt-4">
+        <form method="POST" action="{{ url_for('profile.manage_profile') }}">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Age</label>
+              <input type="number" name="age" class="form-control" value="{{ profile.age or '' }}">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Gender</label>
+              <select name="gender" class="form-select">
+                <option value="">Select</option>
+                <option value="Male" {% if profile.gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if profile.gender == 'Female' %}selected{% endif %}>Female</option>
+                <option value="Other" {% if profile.gender == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">SSN</label>
+              <input type="text" name="ssn" class="form-control" value="{{ profile.ssn or '' }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" value="{{ profile.email or '' }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Phone</label>
+              <input type="text" name="phone_number" class="form-control" value="{{ profile.phone_number or '' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address</label>
+              <input type="text" name="address" class="form-control" value="{{ profile.address or '' }}">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-success mt-3">Save Changes</button>
+        </form>
+      </div>
+
+      {% else %}
+      <!-- Create Profile -->
+      <p class="text-muted mb-3">You don’t have a profile yet.</p>
+      <form method="POST" action="{{ url_for('profile.manage_profile') }}">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Age</label>
+            <input type="number" name="age" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-select">
+              <option value="">Select</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">SSN</label>
+            <input type="text" name="ssn" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone_number" class="form-control">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Address</label>
+            <input type="text" name="address" class="form-control">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Create Profile</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if profile %}
+  <!-- ================= MEDICAL HISTORY ================= -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">🩺 Medical History</h3>
+        <button class="btn btn-success btn-sm" data-bs-toggle="collapse" data-bs-target="#addMedicalForm">
+          + Add Medical Record
+        </button>
+      </div>
+
+      {% if medical_histories %}
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th style="width: 160px;">Actions</th>
+              <th>Disease</th>
+              <th>Doctor</th>
+              <th>Description</th>
+              <th>Active Medication</th>
+              <th>Medications</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rec in medical_histories %}
+            <tr>
+              <td>
+                <button class="btn btn-sm btn-warning" data-bs-toggle="collapse" data-bs-target="#editRecForm{{ rec.id }}">✏️</button>
+                <form action="{{ url_for('profile.delete_medical_history', record_id=rec.id) }}" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                </form>
+              </td>
+              <td>{{ rec.disease }}</td>
+              <td>{{ rec.doctor }}</td>
+              <td>{{ rec.description }}</td>
+              <td>
+                {% if rec.has_active_medications %}
+                  <span class="badge bg-success">Yes</span>
+                {% else %}
+                  <span class="badge bg-secondary">No</span>
+                {% endif %}
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#viewMed{{ rec.id }}"
+                        aria-expanded="false"
+                        aria-controls="viewMed{{ rec.id }}">
+                  View Details
+                </button>
+                <button class="btn btn-sm btn-success"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#addMedForm{{ rec.id }}"
+                        aria-expanded="false"
+                        aria-controls="addMedForm{{ rec.id }}">
+                  + Add Medication
+                </button>
+              </td>
+            </tr>
+
+            <!-- Edit Medical Record Form -->
+            <tr class="collapse" id="editRecForm{{ rec.id }}">
+              <td colspan="6">
+                <form method="POST" action="{{ url_for('profile.edit_medical_history', record_id=rec.id) }}" class="card card-body">
+                  <div class="mb-3">
+                    <label class="form-label">Disease / Condition</label>
+                    <input type="text" name="disease" class="form-control" value="{{ rec.disease }}" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Doctor</label>
+                    <input type="text" name="doctor" class="form-control" value="{{ rec.doctor or '' }}">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control">{{ rec.description or '' }}</textarea>
+                  </div>
+                  <button class="btn btn-success" type="submit">Save Changes</button>
+                </form>
+              </td>
+            </tr>
+
+            <!-- Medication Details -->
+            <tr class="collapse" id="viewMed{{ rec.id }}">
+              <td colspan="6">
+                {% if rec.medications %}
+                  {% for med in rec.medications %}
+                  <div class="card mb-3">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                          <h5 class="mb-1">{{ med.name }}
+                            <span class="badge {% if med.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                              {{ med.status_label }}
+                            </span>
+                          </h5>
+                          <div class="small text-muted">
+                            {{ med.dosage or '' }}{% if med.dosage and med.frequency %} · {% endif %}{{ med.frequency or '' }}
+                          </div>
+                          <div class="small">Start: {{ med.start_date or '-' }} | End: {{ med.end_date or '-' }}</div>
+                          <div class="small">Reminder: {{ med.reminder_time.strftime('%H:%M') if med.reminder_time else '-' }}</div>
+                          {% if med.notes %}
+                          <div class="mt-1 small"><em>Notes:</em> {{ med.notes }}</div>
+                          {% endif %}
+                        </div>
+                        <div>
+                          <button class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#editMed{{ med.id }}">✏️</button>
+                          <form action="{{ url_for('profile.delete_medication', med_id=med.id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                          </form>
+                        </div>
+                      </div>
+
+                      <!-- Inline Edit Form -->
+                      <div class="collapse mt-3" id="editMed{{ med.id }}">
+                        <form method="POST" action="{{ url_for('profile.edit_medication', med_id=med.id) }}">
+                          <div class="row g-2">
+                            <div class="col-md-4">
+                              <input type="text" name="name" class="form-control" value="{{ med.name }}" required>
+                            </div>
+                            <div class="col-md-4">
+                              <input type="text" name="dosage" class="form-control" value="{{ med.dosage or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                              <input type="text" name="frequency" class="form-control" value="{{ med.frequency or '' }}">
+                            </div>
+                          </div>
+                          <div class="row g-2 mt-2">
+                            <div class="col-md-4">
+                              <input type="date" name="start_date" class="form-control"
+                                value="{{ med.start_date.strftime('%Y-%m-%d') if med.start_date else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                              <input type="date" name="end_date" class="form-control"
+                                value="{{ med.end_date.strftime('%Y-%m-%d') if med.end_date else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                              <input type="time" name="reminder_time" class="form-control"
+                                value="{{ med.reminder_time.strftime('%H:%M') if med.reminder_time else '' }}">
+                            </div>
+                          </div>
+                          <div class="mt-2">
+                            <textarea name="notes" class="form-control" rows="2">{{ med.notes or '' }}</textarea>
+                          </div>
+                          <button type="submit" class="btn btn-primary mt-2">Update</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                {% else %}
+                  <p class="text-muted">No medication records yet.</p>
+                {% endif %}
+              </td>
+            </tr>
+
+            <!-- Add Medication Form -->
+            <tr class="collapse" id="addMedForm{{ rec.id }}">
+              <td colspan="6">
+                <form method="POST" action="{{ url_for('profile.add_medication', record_id=rec.id) }}" class="card card-body">
+                  <h5 class="mb-3">+ Add Medication — {{ rec.disease }}</h5>
+                  <div class="row g-2">
+                    <div class="col-md-4">
+                      <input type="text" name="name" class="form-control" placeholder="Name" required>
+                    </div>
+                    <div class="col-md-4">
+                      <input type="text" name="dosage" class="form-control" placeholder="Dosage">
+                    </div>
+                    <div class="col-md-4">
+                      <input type="text" name="frequency" class="form-control" placeholder="Frequency">
+                    </div>
+                  </div>
+                  <div class="row g-2 mt-2">
+                    <div class="col-md-4">
+                      <input type="date" name="start_date" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                      <input type="date" name="end_date" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                      <input type="time" name="reminder_time" class="form-control">
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <textarea name="notes" class="form-control" rows="2" placeholder="Notes"></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-success mt-3">Add Medication</button>
+                </form>
+              </td>
+            </tr>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted">No medical records yet.</p>
+      {% endif %}
+
+      <!-- Add Medical Record Form -->
+      <div class="collapse mt-4" id="addMedicalForm">
+        <h5 class="mb-3">Add Medical Record</h5>
+        <form method="POST" action="{{ url_for('profile.add_medical_history') }}">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Disease / Condition</label>
+              <input type="text" name="disease" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Doctor</label>
+              <input type="text" name="doctor" class="form-control">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-success mt-3">Add Medical Record</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ================= COLLAPSE FIX SCRIPT ================= -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const toggleButtons = document.querySelectorAll('[data-bs-toggle="collapse"][data-bs-target^="#viewMed"]');
+
+  toggleButtons.forEach(btn => {
+    btn.addEventListener('click', function () {
+      const targetId = this.getAttribute('data-bs-target');
+      const targetEl = document.querySelector(targetId);
+
+      // Close other open collapses
+      document.querySelectorAll('.collapse.show').forEach(openEl => {
+        if (openEl.id !== targetId.substring(1)) {
+          const bsCollapse = bootstrap.Collapse.getInstance(openEl);
+          if (bsCollapse) bsCollapse.hide();
+        }
+      });
+
+      // Toggle this collapse manually
+      const bsTarget = bootstrap.Collapse.getOrCreateInstance(targetEl);
+      if (targetEl.classList.contains('show')) {
+        bsTarget.hide();
+      } else {
+        bsTarget.show();
+      }
+    });
+  });
+});
+</script>
+
+{% endblock %}
