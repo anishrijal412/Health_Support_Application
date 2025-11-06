@@ -90,6 +90,10 @@
               href="{{ url_for('appointments.index') }}">Appointments</a>
           </li>
           <li class="nav-item">
+            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('forum.') %}active{% endif %}"
+              href="{{ url_for('forum.forum_home') }}">Forum</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link {% if request.endpoint == 'profile.manage_profile' %}active{% endif %}"
               href="{{ url_for('profile.manage_profile') }}">Profile</a>
           </li>
@@ -129,7 +133,8 @@
             <div class="list-group-item">
               <div class="d-flex w-100 justify-content-between">
                 <h6 class="mb-1"><i class="bi bi-calendar-event me-2 text-primary"></i>{{ appt.title }}</h6>
-                <small class="text-muted">{{ appt.date.strftime('%b %d, %Y') }} · {{ appt.time.strftime('%I:%M %p') }}</small>
+                <small class="text-muted">{{ appt.date.strftime('%b %d, %Y') }} · {{ appt.time.strftime('%I:%M %p')
+                  }}</small>
               </div>
               {% if appt.description %}
               <p class="mb-1 text-muted">{{ appt.description }}</p>

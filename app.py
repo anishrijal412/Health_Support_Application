@@ -37,6 +37,9 @@ def create_app():
     from routes.profile import profile_bp
     from routes.appointments import appointments_bp  
     from routes.medications import medications_bp
+    from routes.forum import forum
+    from models.forum import ForumPost, ForumReply
+
 
     # ✅ Register blueprints
     app.register_blueprint(auth)
@@ -45,6 +48,8 @@ def create_app():
     app.register_blueprint(profile_bp)
     app.register_blueprint(appointments_bp)  
     app.register_blueprint(medications_bp)
+    app.register_blueprint(forum)
+
 
     # ✅ Import models (this MUST happen before db.create_all)
     from models.profile import Profile

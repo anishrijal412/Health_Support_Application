@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Forum{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">💬 Community Forum</h2>
+
+  <!-- New Post -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('forum.new_post') }}">
+        <div class="mb-3">
+          <input type="text" name="title" class="form-control" placeholder="Post title" required>
+        </div>
+        <div class="mb-3">
+          <textarea name="content" class="form-control" rows="3" placeholder="Write something..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Post</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Posts -->
+  {% for post in posts %}
+  <div class="card mb-3 shadow-sm">
+    <div class="card-body">
+      <h5>{{ post.title }}</h5>
+      <p>{{ post.content }}</p>
+      <small class="text-muted">By {{ post.user.username }} on {{ post.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+      <hr>
+
+      <!-- Replies -->
+      {% if post.replies %}
+        {% for reply in post.replies %}
+        <div class="border-start ps-3 mb-2">
+          <p class="mb-1">{{ reply.content }}</p>
+          <small class="text-muted">— {{ reply.user.username }}, {{ reply.created_at.strftime('%b %d %I:%M %p') }}</small>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Add Reply -->
+      <form method="POST" action="{{ url_for('forum.reply_post', post_id=post.id) }}">
+        <div class="input-group mt-2">
+          <input type="text" name="content" class="form-control" placeholder="Write a reply..." required>
+          <button class="btn btn-outline-success" type="submit">Reply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-secondary">No posts yet. Be the first to start a conversation!</div>
+  {% endfor %}
+</div>
+{% endblock %}
