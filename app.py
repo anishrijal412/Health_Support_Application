@@ -3,6 +3,8 @@ from flask import Flask
 from extensions import db, bcrypt, login_manager, mail   
 from flask_login import current_user
 from datetime import datetime
+from sqlalchemy import inspect, text
+from sqlalchemy.exc import NoSuchTableError
 
 def create_app():
     app = Flask(__name__)
@@ -12,6 +14,8 @@ def create_app():
     app.config['SECRET_KEY'] = 'dev-secret-key'
     app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(basedir, 'instance', 'mental_health.db')}"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['MEDICAL_REPORT_UPLOAD_FOLDER'] = os.path.join(basedir, 'instance', 'medical_reports')
+    app.config['MEDICAL_REPORT_ALLOWED_EXTENSIONS'] = {'pdf'}
 
     # ✅ Gmail SMTP config (for password reset)
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -42,14 +46,12 @@ def create_app():
     app.register_blueprint(appointments_bp)  
     app.register_blueprint(medications_bp)
 
-
     # ✅ Import models (this MUST happen before db.create_all)
     from models.profile import Profile
     from models.medical_history import MedicalHistory
-    from models.medication import Medication   # 👈 NEW
+    from models.medication import Medication
     from models.appointment import Appointment
 
-    
     @app.context_processor
     def inject_notifications():
         """Provide appointment notifications to all templates."""
@@ -78,12 +80,27 @@ def create_app():
             'notification_count': notification_count
         }
 
+    # ✅ Ensure upload folder exists
+    os.makedirs(app.config['MEDICAL_REPORT_UPLOAD_FOLDER'], exist_ok=True)
 
-    # ✅ Create DB tables
+    # ✅ Create DB tables and add missing column
     with app.app_context():
+        inspector = inspect(db.engine)
+        try:
+            columns = {column['name'] for column in inspector.get_columns('medical_histories')}
+        except NoSuchTableError:
+            columns = set()
+
+       
+        if columns and 'report_filename' not in columns:
+            with db.engine.begin() as connection:
+                connection.execute(
+                    text("ALTER TABLE medical_histories ADD COLUMN report_filename VARCHAR(255)")
+                )
+
         db.create_all()
 
-    return app
+    return app  # ✅ Now correctly indented INSIDE the function
 
 
 if __name__ == "__main__":

@@ -148,6 +148,13 @@
                 <form action="{{ url_for('profile.delete_medical_history', record_id=rec.id) }}" method="POST" class="d-inline">
                   <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
                 </form>
+                 {% if rec.report_filename %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('profile.view_medical_report', record_id=rec.id) }}" target="_blank" title="View Report">
+                  📄
+                </a>
+                {% else %}
+                <button class="btn btn-sm btn-outline-secondary" type="button" disabled title="No report uploaded">📄</button>
+                {% endif %}
               </td>
               <td>{{ rec.disease }}</td>
               <td>{{ rec.doctor }}</td>
@@ -182,8 +189,8 @@
             <!-- Edit Medical Record Form -->
             <tr class="collapse" id="editRecForm{{ rec.id }}">
               <td colspan="6">
-                <form method="POST" action="{{ url_for('profile.edit_medical_history', record_id=rec.id) }}" class="card card-body">
-                  <div class="mb-3">
+                <form method="POST" action="{{ url_for('profile.edit_medical_history', record_id=rec.id) }}" class="card card-body" enctype="multipart/form-data">
+                <div class="mb-3">
                     <label class="form-label">Disease / Condition</label>
                     <input type="text" name="disease" class="form-control" value="{{ rec.disease }}" required>
                   </div>
@@ -194,6 +201,13 @@
                   <div class="mb-3">
                     <label class="form-label">Description</label>
                     <textarea name="description" class="form-control">{{ rec.description or '' }}</textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Report (PDF)</label>
+                    <input type="file" name="report_file" accept="application/pdf" class="form-control">
+                    {% if rec.report_filename %}
+                    <div class="form-text">Uploading a new file will replace the existing report.</div>
+                    {% endif %}
                   </div>
                   <button class="btn btn-success" type="submit">Save Changes</button>
                 </form>
@@ -320,7 +334,7 @@
       <!-- Add Medical Record Form -->
       <div class="collapse mt-4" id="addMedicalForm">
         <h5 class="mb-3">Add Medical Record</h5>
-        <form method="POST" action="{{ url_for('profile.add_medical_history') }}">
+        <form method="POST" action="{{ url_for('profile.add_medical_history') }}" enctype="multipart/form-data">
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Disease / Condition</label>
@@ -333,6 +347,10 @@
             <div class="col-12">
               <label class="form-label">Description</label>
               <textarea name="description" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Report (PDF)</label>
+              <input type="file" name="report_file" accept="application/pdf" class="form-control">
             </div>
           </div>
           <button type="submit" class="btn btn-success mt-3">Add Medical Record</button>
