@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <title>Mental Health App</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
@@ -47,6 +48,19 @@
       color: #10926b !important;
       font-weight: 600;
     }
+
+    .notification-button {
+      background: transparent;
+      border: none;
+      color: #e0e0e0;
+      font-weight: 500;
+      padding: 6px 12px;
+    }
+
+    .notification-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
   </style>
 
 </head>
@@ -79,6 +93,18 @@
             <a class="nav-link {% if request.endpoint == 'profile.manage_profile' %}active{% endif %}"
               href="{{ url_for('profile.manage_profile') }}">Profile</a>
           </li>
+          <li class="nav-item d-flex align-items-center">
+            <button type="button" class="notification-button position-relative" data-bs-toggle="modal"
+              data-bs-target="#notificationsModal">
+              <i class="bi bi-bell-fill"></i>
+              {% if notification_count %}
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ notification_count }}
+                <span class="visually-hidden">Notifications</span>
+              </span>
+              {% endif %}
+            </button>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
           </li>
@@ -86,6 +112,42 @@
       </div>
     </div>
   </nav>
+
+  <!-- Notifications Modal -->
+  <div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="notificationsModalLabel">Upcoming Appointments</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {% if notification_items %}
+          <div class="list-group">
+            {% for appt in notification_items %}
+            <div class="list-group-item">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1"><i class="bi bi-calendar-event me-2 text-primary"></i>{{ appt.title }}</h6>
+                <small class="text-muted">{{ appt.date.strftime('%b %d, %Y') }} · {{ appt.time.strftime('%I:%M %p') }}</small>
+              </div>
+              {% if appt.description %}
+              <p class="mb-1 text-muted">{{ appt.description }}</p>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-muted mb-0">No upcoming appointments. Schedule one to receive notifications.</p>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <div class="container mt-4">
     {% with messages = get_flashed_messages(with_categories=true) %}

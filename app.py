@@ -1,6 +1,8 @@
 import os
 from flask import Flask
-from extensions import db, bcrypt, login_manager, mail   # ✅ include mail
+from extensions import db, bcrypt, login_manager, mail   
+from flask_login import current_user
+from datetime import datetime
 
 def create_app():
     app = Flask(__name__)
@@ -46,6 +48,36 @@ def create_app():
     from models.medical_history import MedicalHistory
     from models.medication import Medication   # 👈 NEW
     from models.appointment import Appointment
+
+    
+    @app.context_processor
+    def inject_notifications():
+        """Provide appointment notifications to all templates."""
+        upcoming_items = []
+
+        if current_user.is_authenticated:
+            now = datetime.now()
+            today = now.date()
+            current_time = now.time()
+
+            user_appointments = (
+                Appointment.query
+                .filter_by(user_id=current_user.id)
+                .order_by(Appointment.date.asc(), Appointment.time.asc())
+                .all()
+            )
+
+            for appt in user_appointments:
+                if appt.date > today or (appt.date == today and appt.time >= current_time):
+                    upcoming_items.append(appt)
+
+        notification_count = len(upcoming_items)
+
+        return {
+            'notification_items': upcoming_items,
+            'notification_count': notification_count
+        }
+
 
     # ✅ Create DB tables
     with app.app_context():
