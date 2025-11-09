@@ -59,3 +59,38 @@ def delete(appointment_id):
     db.session.commit()
     flash('Appointment deleted.', 'info')
     return redirect(url_for('appointments.index'))
+
+
+@appointments_bp.route('/appointments/update/<int:appointment_id>', methods=['POST'])
+@login_required
+def update(appointment_id):
+    appt = Appointment.query.get_or_404(appointment_id)
+
+    if appt.user_id != current_user.id:
+        flash('Unauthorized action.', 'danger')
+        return redirect(url_for('appointments.index'))
+
+    title = request.form.get('title')
+    date_str = request.form.get('date')
+    time_str = request.form.get('time')
+    description = request.form.get('description')
+
+    if not title or not date_str or not time_str:
+        flash('Please fill out Title, Date, and Time.', 'danger')
+        return redirect(url_for('appointments.index'))
+
+    try:
+        appt_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        appt_time = datetime.strptime(time_str, "%H:%M").time()
+    except ValueError:
+        flash('Invalid date/time format.', 'danger')
+        return redirect(url_for('appointments.index'))
+
+    appt.title = title
+    appt.date = appt_date
+    appt.time = appt_time
+    appt.description = description
+
+    db.session.commit()
+    flash('Appointment updated successfully!', 'success')
+    return redirect(url_for('appointments.index'))
