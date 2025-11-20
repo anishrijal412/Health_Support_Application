@@ -14,7 +14,11 @@
         <div class="mb-3">
           <textarea name="content" class="form-control" rows="3" placeholder="Write something..." required></textarea>
         </div>
-        <button type="submit" class="btn btn-primary">Post</button>
+        <div class="d-flex align-items-center gap-3">
+          <button type="submit" class="btn btn-primary" id="new-post-submit">Post</button>
+          <div class="spinner-border text-primary d-none" role="status" id="new-post-spinner" aria-hidden="true"></div>
+          <span class="text-muted small" id="new-post-status"></span>
+        </div>
       </form>
     </div>
   </div>
@@ -25,24 +29,27 @@
     <div class="card-body">
       <h5>{{ post.title }}</h5>
       <p>{{ post.content }}</p>
-      <small class="text-muted">By {{ post.user.username }} on {{ post.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+      <small class="text-muted">By {{ post.user.username }} on {{ post.created_at.strftime('%b %d, %Y %I:%M %p')
+        }}</small>
       <hr>
 
       <!-- Replies -->
       {% if post.replies %}
-        {% for reply in post.replies %}
-        <div class="border-start ps-3 mb-2">
-          <p class="mb-1">{{ reply.content }}</p>
-          <small class="text-muted">— {{ reply.user.username }}, {{ reply.created_at.strftime('%b %d %I:%M %p') }}</small>
-        </div>
-        {% endfor %}
+      {% for reply in post.replies %}
+      <div class="border-start ps-3 mb-2">
+        <p class="mb-1">{{ reply.content }}</p>
+        <small class="text-muted">— {{ reply.user.username }}, {{ reply.created_at.strftime('%b %d %I:%M %p') }}</small>
+      </div>
+      {% endfor %}
       {% endif %}
 
       <!-- Add Reply -->
       <form method="POST" action="{{ url_for('forum.reply_post', post_id=post.id) }}">
-        <div class="input-group mt-2">
+        <div class="input-group mt-2 align-items-center">
           <input type="text" name="content" class="form-control" placeholder="Write a reply..." required>
           <button class="btn btn-outline-success" type="submit">Reply</button>
+          <div class="spinner-border spinner-border-sm text-success ms-2 d-none" role="status" aria-hidden="true"></div>
+          <span class="text-muted small ms-2 d-none">Reviewing…</span>
         </div>
       </form>
     </div>
@@ -51,4 +58,32 @@
   <div class="alert alert-secondary">No posts yet. Be the first to start a conversation!</div>
   {% endfor %}
 </div>
+<script>
+  const newPostForm = document.querySelector(
+    `form[action='{{ url_for('forum.new_post') }}']`
+  );
+
+  if (newPostForm) {
+    const spinner = document.getElementById('new-post-spinner');
+    const status = document.getElementById('new-post-status');
+    newPostForm.addEventListener('submit', () => {
+      if (spinner) spinner.classList.remove('d-none');
+      if (status) status.textContent = "Content is being reviewed…";
+      console.log("Submitting new post for AI review…");
+    });
+  }
+
+  document.querySelectorAll(`form[action^="/forum/"]`).forEach((replyForm) => {
+    if (replyForm.action.endsWith("/reply")) {
+      const spinner = replyForm.querySelector(".spinner-border");
+      const status = replyForm.querySelector(".text-muted");
+      replyForm.addEventListener("submit", () => {
+        if (spinner) spinner.classList.remove("d-none");
+        if (status) status.classList.remove("d-none");
+        console.log("Submitting reply for AI review…");
+      });
+    }
+  });
+</script>
+
 {% endblock %}

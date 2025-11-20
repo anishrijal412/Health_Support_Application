@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask
 from extensions import db, bcrypt, login_manager, mail   
 from flask_login import current_user
@@ -39,6 +41,9 @@ def create_app():
     from routes.medications import medications_bp
     from routes.forum import forum
     from models.forum import ForumPost, ForumReply
+    from routes.api_test import api_test
+
+
 
 
     # ✅ Register blueprints
@@ -49,6 +54,8 @@ def create_app():
     app.register_blueprint(appointments_bp)  
     app.register_blueprint(medications_bp)
     app.register_blueprint(forum)
+    app.register_blueprint(api_test)
+    
 
 
     # ✅ Import models (this MUST happen before db.create_all)
@@ -56,6 +63,7 @@ def create_app():
     from models.medical_history import MedicalHistory
     from models.medication import Medication
     from models.appointment import Appointment
+    from routes.api_test import api_test
 
     @app.context_processor
     def inject_notifications():

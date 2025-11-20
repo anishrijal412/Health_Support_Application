@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from extensions import db
 from models.forum import ForumPost, ForumReply
+from routes.moderation import is_safe_content_ai
 
 forum = Blueprint('forum', __name__)
 
@@ -22,14 +23,23 @@ def new_post():
         flash('Please fill out all fields.', 'warning')
         return redirect(url_for('forum.forum_home'))
 
-    # Simple moderation placeholder (replace later with real API)
-    if not is_safe_content(content):
-        flash('⚠️ Post contains unsafe content and was blocked.', 'danger')
+    # Run moderation
+    is_safe, detail = is_safe_content_ai(f"{title}\n{content}")
+
+    # If unsafe → block and stop
+    if not is_safe:
+        flash(f'⚠️ Post blocked: {detail}', 'danger')
         return redirect(url_for('forum.forum_home'))
 
-    post = ForumPost(user_id=current_user.id, title=title, content=content)
+    # SAFE → Save the post
+    post = ForumPost(
+        user_id=current_user.id,
+        title=title,
+        content=content
+    )
     db.session.add(post)
     db.session.commit()
+
     flash('✅ Post added successfully!', 'success')
     return redirect(url_for('forum.forum_home'))
 
@@ -41,17 +51,18 @@ def reply_post(post_id):
         flash('Reply cannot be empty.', 'warning')
         return redirect(url_for('forum.forum_home'))
 
-    if not is_safe_content(content):
-        flash('⚠️ Reply blocked due to unsafe content.', 'danger')
+    is_safe, detail = is_safe_content_ai(content)
+    if not is_safe:
+        flash(f'⚠️ Reply blocked: {detail}', 'danger')
         return redirect(url_for('forum.forum_home'))
 
-    reply = ForumReply(post_id=post_id, user_id=current_user.id, content=content)
+    reply = ForumReply(
+        post_id=post_id, 
+        user_id=current_user.id, 
+        content=content
+    )
     db.session.add(reply)
     db.session.commit()
+
     flash('💬 Reply added successfully.', 'success')
     return redirect(url_for('forum.forum_home'))
-
-def is_safe_content(text):
-    """Temporary moderation placeholder"""
-    banned_words = ['suicide', 'kill', 'self-harm', 'harm', 'abuse']
-    return not any(word in text.lower() for word in banned_words)
