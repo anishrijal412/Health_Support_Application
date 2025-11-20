@@ -42,6 +42,7 @@ def create_app():
     from routes.forum import forum
     from models.forum import ForumPost, ForumReply
     from routes.api_test import api_test
+    from routes.unit_test import unit_test
 
 
 
@@ -55,6 +56,7 @@ def create_app():
     app.register_blueprint(medications_bp)
     app.register_blueprint(forum)
     app.register_blueprint(api_test)
+    app.register_blueprint(unit_test)
     
 
 

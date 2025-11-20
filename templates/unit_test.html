@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <div class="row mb-4">
+    <div class="col">
+      <h2 class="fw-bold">Unit Test Runner</h2>
+      <p class="text-muted mb-0">Trigger automated test suites and download the latest Excel report.</p>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-12 d-flex flex-wrap gap-2">
+      <button class="btn btn-primary" data-endpoint="/run-all-tests">RUN ALL TESTS</button>
+      <button class="btn btn-outline-primary" data-endpoint="/run-login-test">LOGIN TEST</button>
+      <button class="btn btn-outline-primary" data-endpoint="/run-forum-test">FORUM POST TEST</button>
+      <button class="btn btn-outline-primary" data-endpoint="/run-appointment-test">APPOINTMENT TEST</button>
+      <button class="btn btn-outline-primary" data-endpoint="/run-profile-test">PROFILE CREATION TEST</button>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="d-flex align-items-center mb-3" id="statusRow">
+        <div class="spinner-border text-primary me-3 d-none" role="status" id="loadingSpinner">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mb-0" id="statusMessage">Select a test suite to begin.</p>
+      </div>
+
+      <ul class="list-group mb-3" id="resultsList"></ul>
+
+      <div id="downloadSection" class="d-none">
+        <a id="downloadLink" href="/download/unit_test_report.xlsx" class="link-primary" download>
+          Download Unit Test Report
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const buttons = document.querySelectorAll('button[data-endpoint]');
+  const statusMessage = document.getElementById('statusMessage');
+  const resultsList = document.getElementById('resultsList');
+  const spinner = document.getElementById('loadingSpinner');
+  const downloadSection = document.getElementById('downloadSection');
+  const downloadLink = document.getElementById('downloadLink');
+
+  function setLoading(isLoading, message) {
+    statusMessage.textContent = message;
+    spinner.classList.toggle('d-none', !isLoading);
+  }
+
+  function renderResults(results) {
+    resultsList.innerHTML = '';
+    results.forEach((result) => {
+      const item = document.createElement('li');
+      item.className = 'list-group-item d-flex justify-content-between align-items-start';
+      const label = document.createElement('span');
+      label.textContent = result.name || 'Unknown Test';
+      const badge = document.createElement('span');
+      const isSuccess = result.status === 'Success';
+      badge.className = `badge ${isSuccess ? 'bg-success' : 'bg-danger'} rounded-pill`;
+      badge.textContent = result.status;
+      item.appendChild(label);
+      item.appendChild(badge);
+      if (result.message) {
+        const small = document.createElement('div');
+        small.className = 'text-muted small mt-1';
+        small.textContent = result.message;
+        item.appendChild(small);
+      }
+      resultsList.appendChild(item);
+    });
+  }
+
+  async function runTests(endpoint) {
+    setLoading(true, 'Running tests…');
+    resultsList.innerHTML = '';
+    downloadSection.classList.add('d-none');
+
+    try {
+      const response = await fetch(endpoint, { method: 'POST' });
+      const data = await response.json();
+      renderResults(data.results || []);
+      if (data.file_url) {
+        downloadLink.href = data.file_url;
+        downloadSection.classList.remove('d-none');
+      }
+      setLoading(false, 'Tests completed.');
+    } catch (error) {
+      setLoading(false, 'Failed to run tests.');
+      resultsList.innerHTML = '<li class="list-group-item text-danger">An error occurred while running tests.</li>';
+    }
+  }
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => runTests(button.dataset.endpoint));
+  });
+</script>
+{% endblock %}

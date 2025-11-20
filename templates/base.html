@@ -97,6 +97,10 @@
             <a class="nav-link {% if request.endpoint == 'profile.manage_profile' %}active{% endif %}"
               href="{{ url_for('profile.manage_profile') }}">Profile</a>
           </li>
+           <li class="nav-item">
+            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('unit_test.') %}active{% endif %}"
+              href="{{ url_for('unit_test.unit_test_page') }}">Unit Test</a>
+          </li>
           <li class="nav-item d-flex align-items-center">
             <button type="button" class="notification-button position-relative" data-bs-toggle="modal"
               data-bs-target="#notificationsModal">
