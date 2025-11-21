@@ -84,7 +84,7 @@ def _run_tests(test_modules=None):
         suites = [loader.loadTestsFromName(name) for name in test_modules]
         suite = unittest.TestSuite(suites)
     else:
-        suite = loader.discover(start_dir=TEST_DIR)
+        suite = loader.discover(start_dir=TEST_DIR, pattern="*_test.py")
 
     stream = io.StringIO()
     runner = RecordingTextTestRunner(stream=stream, verbosity=2)
@@ -112,22 +112,22 @@ def run_all_tests():
 
 @unit_test.route('/run-login-test', methods=['POST'])
 def run_login_test():
-    return jsonify(_run_tests(['tests.test_login']))
+    return jsonify(_run_tests(['tests.login_test']))
 
 
 @unit_test.route('/run-forum-test', methods=['POST'])
 def run_forum_test():
-    return jsonify(_run_tests(['tests.test_forum']))
+    return jsonify(_run_tests(['tests.forum_test']))
 
 
 @unit_test.route('/run-appointment-test', methods=['POST'])
 def run_appointment_test():
-    return jsonify(_run_tests(['tests.test_appointment']))
+    return jsonify(_run_tests(['tests.appointment_test']))
 
 
 @unit_test.route('/run-profile-test', methods=['POST'])
 def run_profile_test():
-    return jsonify(_run_tests(['tests.test_profile']))
+    return jsonify(_run_tests(['tests.profile_test']))
 
 
 @unit_test.route(f'/download/{REPORT_FILENAME}')
