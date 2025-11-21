@@ -104,9 +104,8 @@ def create_app():
         try:
             columns = {column['name'] for column in inspector.get_columns('medical_histories')}
         except NoSuchTableError:
-            columns = set()
-
-       
+            columns = set() 
+            
         if columns and 'report_filename' not in columns:
             with db.engine.begin() as connection:
                 connection.execute(
@@ -114,9 +113,7 @@ def create_app():
                 )
 
         db.create_all()
-
     return app  # ✅ Now correctly indented INSIDE the function
-
 
 if __name__ == "__main__":
     app = create_app()
