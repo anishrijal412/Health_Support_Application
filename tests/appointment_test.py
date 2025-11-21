@@ -8,12 +8,12 @@ from models.appointment import Appointment
 
 class AppointmentTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(
-            TESTING=True,
-            SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
-            WTF_CSRF_ENABLED=False,
-        )
+        # Test-safe create_app
+        self.app = create_app({
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "WTF_CSRF_ENABLED": False,
+        })
         self.client = self.app.test_client()
 
         with self.app.app_context():

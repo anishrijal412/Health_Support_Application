@@ -7,12 +7,11 @@ from models.profile import Profile
 
 class ProfileTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(
-            TESTING=True,
-            SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
-            WTF_CSRF_ENABLED=False,
-        )
+        self.app = create_app({
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "WTF_CSRF_ENABLED": False,
+        })
         self.client = self.app.test_client()
 
         with self.app.app_context():
@@ -58,7 +57,6 @@ class ProfileTestCase(unittest.TestCase):
             self.assertEqual(profile.age, 30)
 
     def test_profile_update(self):
-        # Create initial profile
         self.client.post(
             "/profile",
             data={
@@ -72,6 +70,7 @@ class ProfileTestCase(unittest.TestCase):
             },
             follow_redirects=True,
         )
+
         response = self.client.post(
             "/profile",
             data={

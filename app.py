@@ -9,37 +9,32 @@ from datetime import datetime
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import NoSuchTableError
 
-
-def create_app():
-    # Create app FIRST
+def create_app(test_config=None):
     app = Flask(__name__)
 
-    # Base directory
     basedir = os.path.abspath(os.path.dirname(__file__))
 
-    # REAL production DB (never touched by tests)
-    real_db_path = os.path.join(basedir, "instance", "mental_health.db")
+    # Test mode: NEVER touch real DB
+    if test_config:
+        app.config.update(test_config)
+    else:
+        real_db_path = os.path.join(basedir, "instance", "mental_health.db")
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{real_db_path}"
 
-    # Print for debugging
-    print("📌 USING DATABASE FILE:", real_db_path)
+    # Default configs
 
-    # Flask configurations
     app.config["SECRET_KEY"] = "dev-secret-key"
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{real_db_path}"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-    # Upload folder
-    app.config["MEDICAL_REPORT_UPLOAD_FOLDER"] = os.path.join(
-        basedir, "instance", "medical_reports"
+    app.config.setdefault("SQLALCHEMY_TRACK_MODIFICATIONS", False)
+    app.config.setdefault(
+        "MEDICAL_REPORT_UPLOAD_FOLDER",
+        os.path.join(basedir, "instance", "medical_reports"),
     )
-    app.config["MEDICAL_REPORT_ALLOWED_EXTENSIONS"] = {"pdf"}
-
-    # Email config
-    app.config["MAIL_SERVER"] = "smtp.gmail.com"
-    app.config["MAIL_PORT"] = 587
-    app.config["MAIL_USE_TLS"] = True
-    app.config["MAIL_USERNAME"] = "anishrijal577@gmail.com"
-    app.config["MAIL_PASSWORD"] = "YOUR_APP_PASSWORD"  # Use app-password
+    app.config.setdefault("MEDICAL_REPORT_ALLOWED_EXTENSIONS", {"pdf"})
+    app.config.setdefault("MAIL_SERVER", "smtp.gmail.com")
+    app.config.setdefault("MAIL_PORT", 587)
+    app.config.setdefault("MAIL_USE_TLS", True)
+    app.config.setdefault("MAIL_USERNAME", "anishrijal577@gmail.com")
+    app.config.setdefault("MAIL_PASSWORD", "YOUR_APP_PASSWORD")
 
     # Init extensions
     db.init_app(app)
@@ -47,7 +42,7 @@ def create_app():
     login_manager.init_app(app)
     mail.init_app(app)
 
-    # Import Blueprints
+    # Import and register blueprints
     from routes.auth import auth
     from routes.dashboard import dashboard
     from routes.reset_password import reset_bp
@@ -58,7 +53,6 @@ def create_app():
     from routes.api_test import api_test
     from routes.unit_test import unit_test
 
-    # Register Blueprints
     app.register_blueprint(auth)
     app.register_blueprint(dashboard)
     app.register_blueprint(reset_bp)
@@ -69,7 +63,7 @@ def create_app():
     app.register_blueprint(api_test)
     app.register_blueprint(unit_test)
 
-    # Import models before create_all()
+    # Import models
     from models.user import User
     from models.profile import Profile
     from models.medical_history import MedicalHistory
@@ -77,26 +71,22 @@ def create_app():
     from models.appointment import Appointment
     from models.forum import ForumPost, ForumReply
 
-    # Notification injection
+    # Notification injector
     @app.context_processor
     def inject_notifications():
         upcoming_items = []
-
         if current_user.is_authenticated:
             now = datetime.now()
             today = now.date()
             current_time = now.time()
-
             user_appointments = (
                 Appointment.query.filter_by(user_id=current_user.id)
                 .order_by(Appointment.date.asc(), Appointment.time.asc())
                 .all()
             )
-
             for appt in user_appointments:
                 if appt.date > today or (appt.date == today and appt.time >= current_time):
                     upcoming_items.append(appt)
-
         return {
             "notification_items": upcoming_items,
             "notification_count": len(upcoming_items),
@@ -105,11 +95,11 @@ def create_app():
     # Ensure folders exist
     os.makedirs(app.config["MEDICAL_REPORT_UPLOAD_FOLDER"], exist_ok=True)
 
-    # Create DB tables & column patches
+    # Database setup
     with app.app_context():
         inspector = inspect(db.engine)
         try:
-            columns = {column["name"] for column in inspector.get_columns("medical_histories")}
+            columns = {c["name"] for c in inspector.get_columns("medical_histories")}
         except NoSuchTableError:
             columns = set()
 
@@ -119,13 +109,12 @@ def create_app():
                     text("ALTER TABLE medical_histories ADD COLUMN report_filename VARCHAR(255)")
                 )
 
-        # Create all tables safely
         db.create_all()
 
     return app
 
 
-
+# Run app
 if __name__ == "__main__":
     app = create_app()
     app.run(debug=True)

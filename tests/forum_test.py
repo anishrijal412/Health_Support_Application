@@ -8,12 +8,11 @@ from models.forum import ForumPost, ForumReply
 
 class ForumTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config.update(
-            TESTING=True,
-            SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",
-            WTF_CSRF_ENABLED=False,
-        )
+        self.app = create_app({
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "WTF_CSRF_ENABLED": False,
+        })
         self.client = self.app.test_client()
 
         with self.app.app_context():
@@ -46,6 +45,7 @@ class ForumTestCase(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(mock_moderation.called)
+
         with self.app.app_context():
             post = ForumPost.query.first()
             self.assertIsNotNone(post)
@@ -61,6 +61,7 @@ class ForumTestCase(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(mock_moderation.called)
+
         with self.app.app_context():
             self.assertEqual(ForumPost.query.count(), 0)
 
@@ -82,6 +83,7 @@ class ForumTestCase(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(mock_moderation.called)
+
         with self.app.app_context():
             reply = ForumReply.query.first()
             self.assertIsNotNone(reply)
@@ -89,14 +91,15 @@ class ForumTestCase(unittest.TestCase):
             self.assertEqual(reply.content, "Here is a helpful reply")
 
     @patch("routes.forum.is_safe_content_ai", return_value=(False, "Contains harmful language"))
-    def test_reply_blocked_by_moderation(self, mock_moderation):
-        # Create initial post under safe moderation
+    def test_reply_blocked(self, mock_moderation):
+        # Create safe post first
         with patch("routes.forum.is_safe_content_ai", return_value=(True, "Clean")):
             self.client.post(
                 "/forum/new",
                 data={"title": "Topic", "content": "A safe topic"},
                 follow_redirects=True,
             )
+
         with self.app.app_context():
             post_id = ForumPost.query.first().id
 
@@ -107,6 +110,7 @@ class ForumTestCase(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(mock_moderation.called)
+
         with self.app.app_context():
             self.assertEqual(ForumReply.query.count(), 0)
 
