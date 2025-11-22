@@ -8,9 +8,12 @@
       <h2 class="fw-bold mb-1">Welcome back, {{ user.username }} 👋</h2>
       <p class="text-muted mb-0">Here's an overview of your activity and care plan.</p>
     </div>
-    {% if engagement_message %}
-    <span class="badge bg-success text-wrap fs-6 mt-3 mt-md-0">{{ engagement_message }}</span>
-    {% endif %}
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-2 mt-3 mt-md-0">
+      {% if engagement_message %}
+      <span class="badge bg-success text-wrap fs-6">{{ engagement_message }}</span>
+      {% endif %}
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('dashboard.flagged_report') }}">View Flagged Content Report</a>
+    </div>
   </div>
 
   <!-- SUMMARY CARDS -->

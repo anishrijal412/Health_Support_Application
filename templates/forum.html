@@ -31,6 +31,14 @@
       <p>{{ post.content }}</p>
       <small class="text-muted">By {{ post.user.username }} on {{ post.created_at.strftime('%b %d, %Y %I:%M %p')
         }}</small>
+        {% if current_user.is_authenticated and post.user_id == current_user.id %}
+      <div class="mt-2 d-flex gap-2">
+        <a class="btn btn-sm btn-outline-warning" href="{{ url_for('forum.edit_post', post_id=post.id) }}">Edit</a>
+        <form method="POST" action="{{ url_for('forum.delete_post', post_id=post.id) }}" class="m-0">
+          <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this post and all replies?');">Delete</button>
+        </form>
+      </div>
+      {% endif %}
       <hr>
 
       <!-- Replies -->
@@ -39,6 +47,14 @@
       <div class="border-start ps-3 mb-2">
         <p class="mb-1">{{ reply.content }}</p>
         <small class="text-muted">— {{ reply.user.username }}, {{ reply.created_at.strftime('%b %d %I:%M %p') }}</small>
+         {% if current_user.is_authenticated and reply.user_id == current_user.id %}
+        <div class="mt-1 d-flex gap-1">
+          <a class="btn btn-sm btn-outline-warning" href="{{ url_for('forum.edit_reply', reply_id=reply.id) }}">Edit</a>
+          <form method="POST" action="{{ url_for('forum.delete_reply', reply_id=reply.id) }}" class="m-0">
+            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this reply?');">Delete</button>
+          </form>
+        </div>
+        {% endif %}
       </div>
       {% endfor %}
       {% endif %}

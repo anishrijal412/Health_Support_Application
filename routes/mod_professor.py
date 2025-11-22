@@ -19,13 +19,15 @@ def professor_moderation(text):
     flagged_keywords = ["self-harm","self harm","suicide","violence","harm"]
     matched = [c for c in categories if any(k in c for k in flagged_keywords)]
 
+    primary_category = matched[0] if matched else None
+
     if safety == "unsafe":
         detail = "Professor AI flagged content as unsafe."
         if matched:
             detail += f" Categories: {', '.join(matched)}."
-        return False, detail
+        return False, detail, primary_category
 
     if matched:
-        return False, f"Professor AI detected harmful content: {', '.join(matched)}"
+         return False, f"Professor AI detected harmful content: {', '.join(matched)}", primary_category
 
-    return True, "Professor AI cleared the content as safe."
+    return True, "Professor AI cleared the content as safe.", None

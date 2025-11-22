@@ -71,9 +71,11 @@ def gemini_moderation(text: str):
 
         is_safe = ai.get("safe", True)
         reason = ai.get("reason", "No explanation")
+        categories = ai.get("categories", [])
+        primary_category = categories[0] if categories else None
 
-        return is_safe, f"Gemini: {reason}"
+        return is_safe, f"Gemini: {reason}", primary_category
 
     except Exception as e:
         print("[Gemini Error]", e)
-        return True, "Gemini unavailable (fallback allowed)."
+        return True, "Gemini unavailable (fallback allowed).", None

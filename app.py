@@ -70,6 +70,7 @@ def create_app(test_config=None):
     from models.medication import Medication
     from models.appointment import Appointment
     from models.forum import ForumPost, ForumReply
+    from models.flagged_log import FlaggedLog
 
     # Notification injector
     @app.context_processor

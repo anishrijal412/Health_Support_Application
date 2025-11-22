@@ -6,6 +6,7 @@ from flask_login import login_required, current_user
 from models.appointment import Appointment
 from models.forum import ForumPost, ForumReply
 from models.profile import Profile
+from models.flagged_log import FlaggedLog
 
 
 dashboard = Blueprint('dashboard', __name__)
@@ -121,3 +122,13 @@ def home():
         chart_data=chart_data,
         engagement_message=engagement_message,
     )
+
+@dashboard.route('/dashboard/flagged-report')
+@login_required
+def flagged_report():
+    flagged_items = (
+        FlaggedLog.query.filter_by(user_id=current_user.id)
+        .order_by(FlaggedLog.created_at.desc())
+        .all()
+    )
+    return render_template('flagged_report.html', logs=flagged_items)
