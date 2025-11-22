@@ -74,7 +74,8 @@ def create_app(test_config=None):
     # Notification injector
     @app.context_processor
     def inject_notifications():
-        upcoming_items = []
+        appointment_notifications = []
+        reply_notifications = []
         if current_user.is_authenticated:
             now = datetime.now()
             today = now.date()
@@ -86,10 +87,24 @@ def create_app(test_config=None):
             )
             for appt in user_appointments:
                 if appt.date > today or (appt.date == today and appt.time >= current_time):
-                    upcoming_items.append(appt)
+                    appointment_notifications.append(appt)
+
+            user_post_ids = [post.id for post in ForumPost.query.filter_by(user_id=current_user.id).all()]
+            if user_post_ids:
+                reply_notifications = (
+                    ForumReply.query.filter(
+                        ForumReply.post_id.in_(user_post_ids),
+                        ForumReply.user_id != current_user.id,
+                    )
+                    .order_by(ForumReply.created_at.desc())
+                    .all()
+                )
+
+        notification_count = len(appointment_notifications) + len(reply_notifications)
         return {
-            "notification_items": upcoming_items,
-            "notification_count": len(upcoming_items),
+            "appointment_notifications": appointment_notifications,
+            "reply_notifications": reply_notifications,
+            "notification_count": notification_count,
         }
 
     # Ensure folders exist

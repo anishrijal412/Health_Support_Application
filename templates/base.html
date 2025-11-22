@@ -9,10 +9,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
-    /* 🌑 Dark Gray Navbar Styling */
     .navbar-custom {
       background-color: #3d4852;
-      /* ✅ Dark Gray */
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
 
@@ -44,7 +42,6 @@
 
     .nav-link.active {
       background-color: #f2f7f6 !important;
-      /* Slightly lighter gray for active */
       color: #10926b !important;
       font-weight: 600;
     }
@@ -67,7 +64,7 @@
 
 <body>
 
-  <!-- ✅ Navbar -->
+  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container">
       <a class="navbar-brand" href="#">
@@ -85,22 +82,27 @@
             <a class="nav-link {% if request.endpoint == 'dashboard.home' %}active{% endif %}"
               href="{{ url_for('dashboard.home') }}">Dashboard</a>
           </li>
+
           <li class="nav-item">
             <a class="nav-link {% if request.endpoint and request.endpoint.startswith('appointments.') %}active{% endif %}"
               href="{{ url_for('appointments.index') }}">Appointments</a>
           </li>
+
           <li class="nav-item">
             <a class="nav-link {% if request.endpoint and request.endpoint.startswith('forum.') %}active{% endif %}"
               href="{{ url_for('forum.forum_home') }}">Forum</a>
           </li>
+
           <li class="nav-item">
             <a class="nav-link {% if request.endpoint == 'profile.manage_profile' %}active{% endif %}"
               href="{{ url_for('profile.manage_profile') }}">Profile</a>
           </li>
-           <li class="nav-item">
+
+          <li class="nav-item">
             <a class="nav-link {% if request.endpoint and request.endpoint.startswith('unit_test.') %}active{% endif %}"
               href="{{ url_for('unit_test.unit_test_page') }}">Unit Test</a>
           </li>
+
           <li class="nav-item d-flex align-items-center">
             <button type="button" class="notification-button position-relative" data-bs-toggle="modal"
               data-bs-target="#notificationsModal">
@@ -113,6 +115,7 @@
               {% endif %}
             </button>
           </li>
+
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
           </li>
@@ -121,38 +124,78 @@
     </div>
   </nav>
 
+
   <!-- Notifications Modal -->
   <div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="notificationsModalLabel">Upcoming Appointments</h5>
+          <h5 class="modal-title" id="notificationsModalLabel">Notifications</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+
         <div class="modal-body">
-          {% if notification_items %}
-          <div class="list-group">
-            {% for appt in notification_items %}
-            <div class="list-group-item">
-              <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1"><i class="bi bi-calendar-event me-2 text-primary"></i>{{ appt.title }}</h6>
-                <small class="text-muted">{{ appt.date.strftime('%b %d, %Y') }} · {{ appt.time.strftime('%I:%M %p')
-                  }}</small>
+          {% if appointment_notifications or reply_notifications %}
+
+          <!-- Forum Replies -->
+          {% if reply_notifications %}
+          <div class="mb-3">
+            <h6 class="text-uppercase text-muted small fw-bold">Forum Replies</h6>
+            <div class="list-group">
+              {% for reply in reply_notifications %}
+              <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between align-items-start">
+                  <div>
+                    <h6 class="mb-1">
+                      <i class="bi bi-chat-text me-2 text-success"></i>{{ reply.user.username }} replied
+                    </h6>
+                    <p class="mb-1 text-muted">{{ reply.content }}</p>
+                  </div>
+                  <small class="text-muted text-nowrap">
+                    {{ reply.created_at.strftime('%b %d, %Y %I:%M %p') }}
+                  </small>
+                </div>
               </div>
-              {% if appt.description %}
-              <p class="mb-1 text-muted">{{ appt.description }}</p>
-              {% endif %}
+              {% endfor %}
             </div>
-            {% endfor %}
           </div>
+          {% endif %}
+
+          <!-- Appointment Notifications -->
+          {% if appointment_notifications %}
+          <div>
+            <h6 class="text-uppercase text-muted small fw-bold">Upcoming Appointments</h6>
+            <div class="list-group">
+              {% for appt in appointment_notifications %}
+              <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="mb-1">
+                    <i class="bi bi-calendar-event me-2 text-primary"></i>{{ appt.title }}
+                  </h6>
+                  <small class="text-muted">
+                    {{ appt.date.strftime('%b %d, %Y') }} · {{ appt.time.strftime('%I:%M %p') }}
+                  </small>
+                </div>
+
+                {% if appt.description %}
+                <p class="mb-1 text-muted">{{ appt.description }}</p>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
           {% else %}
-          <p class="text-muted mb-0">No upcoming appointments. Schedule one to receive notifications.</p>
+          <p class="text-muted mb-0">You're all caught up—no new notifications.</p>
           {% endif %}
         </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
+
       </div>
     </div>
   </div>
@@ -171,6 +214,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>
