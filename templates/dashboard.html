@@ -1,8 +1,223 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<div class="text-center">
-  <h2>Welcome, {{ user.username }} 👋</h2>
-  <p>This is your dashboard.</p>
+
+<div class="py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">Welcome back, {{ user.username }} 👋</h2>
+      <p class="text-muted mb-0">Here's an overview of your activity and care plan.</p>
+    </div>
+    {% if engagement_message %}
+    <span class="badge bg-success text-wrap fs-6 mt-3 mt-md-0">{{ engagement_message }}</span>
+    {% endif %}
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <p class="text-muted mb-1">Total Medications</p>
+          <h3 class="fw-bold">{{ medication_count }}</h3>
+          <p class="small text-muted mb-0">{{ medication_reminder_stats.active }} active reminder{{ 's' if medication_reminder_stats.active != 1 else '' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <p class="text-muted mb-1">Upcoming Appointments</p>
+          <h3 class="fw-bold">{{ appointment_count }}</h3>
+          {% if appointment_dates_next_week %}
+          <p class="small text-muted mb-0">{{ appointment_dates_next_week|length }} in the next 7 days</p>
+          {% else %}
+          <p class="small text-muted mb-0">No appointments scheduled soon.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <p class="text-muted mb-1">Forum Posts</p>
+          <h3 class="fw-bold">{{ forum_post_count }}</h3>
+          <p class="small text-muted mb-0">Keep sharing your thoughts.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <p class="text-muted mb-1">Forum Replies</p>
+          <h3 class="fw-bold">{{ forum_reply_count }}</h3>
+          {% if forum_reply_count %}
+          <p class="small text-muted mb-0">You've been engaging with the community.</p>
+          {% else %}
+          <p class="small text-muted mb-0">Start a conversation today.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART + APPOINTMENTS -->
+  <div class="row g-4 mb-4">
+    <div class="col-12 col-lg-7">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Medication Reminders</h5>
+            <span class="badge bg-light text-dark">Last 7 days</span>
+          </div>
+          <div style="height: 250px;">
+            <canvas id="reminderChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Upcoming Appointments</h5>
+            <span class="badge bg-light text-dark">Next 5</span>
+          </div>
+
+          {% if next_five_appointments %}
+          <ul class="list-group list-group-flush">
+            {% for appt in next_five_appointments %}
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="mb-1">{{ appt.title }}</h6>
+                <p class="small text-muted mb-0">{{ appt.description or 'No description provided' }}</p>
+              </div>
+              <div class="text-end">
+                <div class="fw-semibold">{{ appt.date.strftime('%b %d') }}</div>
+                <div class="text-muted small">{{ appt.time.strftime('%I:%M %p') }}</div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted mb-0">No appointments found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORUM ACTIVITY + INSIGHTS -->
+  <div class="row g-4">
+    <div class="col-12 col-lg-7">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Recent Forum Activity</h5>
+            <span class="badge bg-light text-dark">Last 5</span>
+          </div>
+
+          {% if recent_activity %}
+          <ul class="list-group list-group-flush">
+            {% for item in recent_activity %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge bg-primary me-2">{{ item.type }}</span>
+                <span class="fw-semibold">{{ item.title }}</span>
+              </div>
+              <small class="text-muted">{{ item.timestamp.strftime('%b %d, %Y') }}</small>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted mb-0">No recent forum activity yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Insights</h5>
+
+          {% if engagement_message %}
+          <p class="mb-2"><i class="bi bi-activity text-success me-2"></i>{{ engagement_message }}</p>
+          {% else %}
+          <p class="text-muted mb-2">We'll share insights here once there's enough activity.</p>
+          {% endif %}
+
+          <p class="text-muted small mb-0">Stay consistent with your medication reminders and appointments to keep your well-being on track.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+
+
+<!-- =========================== -->
+<!-- SAFE JSON DATA FOR CHART   -->
+<!-- =========================== -->
+<script id="chartData" type="application/json">
+{
+  "labels": {{ chart_labels|tojson }},
+  "data": {{ chart_data|tojson }}
+}
+</script>
+
+<!-- =========================== -->
+<!-- CHART.JS SCRIPT (NO BUGS)  -->
+<!-- =========================== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  let reminderChartRef = null;
+
+  const jsonData = document.getElementById('chartData').textContent;
+  const chartInfo = JSON.parse(jsonData);
+  const canvas = document.getElementById('reminderChart');
+
+  if (reminderChartRef) {
+    reminderChartRef.destroy();
+  }
+
+  if (canvas) {
+    const maxValue = Math.max(...chartInfo.data, 1);
+
+    reminderChartRef = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: chartInfo.labels,
+        datasets: [{
+          label: 'Reminders Triggered',
+          data: chartInfo.data,
+          borderColor: '#0d6efd',
+          backgroundColor: 'rgba(13,110,253,0.1)',
+          tension: 0.3,
+          fill: true,
+          pointRadius: 4,
+          pointBackgroundColor: '#0d6efd'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }},
+        scales: {
+          y: {
+            beginAtZero: true,
+            suggestedMax: maxValue + 1,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
+    });
+  }
+</script>
+
 {% endblock %}
